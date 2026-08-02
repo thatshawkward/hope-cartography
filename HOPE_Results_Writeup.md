@@ -153,23 +153,6 @@ measurably, a property of the register the surrogate protects. That is the
 premise DEFT's frozen-core transfer stands on, demonstrated on real
 registers with nameable units.
 
-## What it means, and what it doesn't
-
-For HOPE: the correlation model fails conservatively (missing merges rather
-than making bad ones) and, at transformer width, fails into irrelevance;
-the capacity model is the load-bearing joint, trustworthy across corpora and
-across most of GPT-2's depth, and anti-trustworthy precisely where the shape
-assumption collapses. The practical diagnostic is already in hand: the same
-calibration pass that builds the surrogate yields the per-block kurtosis
-profile that flags where not to believe it. For language models: compression order is readable as a hierarchy
-of dispensability, that hierarchy is corpus- and register-relative, and the
-eviction ledger gives the "acquisition in reverse" reading an operational
-form. The honest limits: these are small models mapped without retraining
-between actions (deliberately, to read the raw data-free trajectory);
-labels are cheap correlational probes; the breadth trend is confounded with
-training quality; and the GELU parent synthesis fixes an input scale that
-ReLU's homogeneity would have left free.
-
 ## Finding 6: GPT-2, where the fiction's failure reaches the map
 
 The GPT-2 experiment (blocks 2, 6, and 12 encoded to 35 percent density,
@@ -178,7 +161,7 @@ around one hypothesis: paper-versus-empirical map divergence should track
 the depth profile of non-Gaussianity. The hypothesis resolved through a
 different channel than posed, twice over.
 
-First, correlations never mattered. Zero merges under *both* correlation
+First, correlations never mattered. Zero merges under both correlation
 models in every block; removed-set Jaccard 1.000 three times; the paper,
 empirical, and capacity-prune-only trajectories are pixel-identical. The
 mechanism is width: a 3072-unit block carries so deep a reservoir of
@@ -192,7 +175,7 @@ Second, the fiction's failure surfaced in the capacity pricing itself, and
 it surfaced exactly where the shape statistics said to look. In block 2,
 whose median excess kurtosis is +3.09 under OANC calibration, the data-free
 ordering is anti-guidance: following it drives NLL from 3.56 to roughly 5.15
-by 60 percent density, then *recovers* non-monotonically to 4.3, while
+by 60 percent density, then recovers non-monotonically to 4.3, while
 random deletion of the same fractions costs almost nothing. Two things in
 that sentence deserve emphasis. Random being free means block 2 is highly
 redundant to unbiased deletion, so the surrogate is not failing to find
@@ -217,6 +200,23 @@ register adaptation, the deep feed-forward blocks are what you would open.
 For anyone calibrating a data-free map, it yields a rule of practice: the
 choice of calibration corpus barely matters early in the stack and matters
 enormously by block 10.
+
+## What it means, and what it doesn't
+
+For HOPE: the correlation model fails conservatively (missing merges rather
+than making bad ones) and, at transformer width, fails into irrelevance;
+the capacity model is the load-bearing joint, trustworthy across corpora and
+across most of GPT-2's depth, and anti-trustworthy precisely where the shape
+assumption collapses. The practical diagnostic is already in hand: the same
+calibration pass that builds the surrogate yields the per-block kurtosis
+profile that flags where not to believe it. For language models: compression order is readable as a hierarchy
+of dispensability, that hierarchy is corpus- and register-relative, and the
+eviction ledger gives the "acquisition in reverse" reading an operational
+form. The limits being these are small models mapped without retraining
+between actions (deliberately, to read the raw data-free trajectory);
+labels are cheap correlational probes; the breadth trend is confounded with
+training quality; and the GELU parent synthesis fixes an input scale that
+ReLU's homogeneity would have left free.
 
 The paper's coda calls parameters mere shadows of the function. Held up
 against language, the shadows cast a map, and the map reads, provided you
