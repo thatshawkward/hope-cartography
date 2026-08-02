@@ -1,0 +1,6 @@
+numpy>=1.26
+scipy>=1.11
+pytest>=8.0
+# stage 2, GPT-2 rerun of experiment A
+torch>=2.2
+transformers>=4.40
