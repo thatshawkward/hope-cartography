@@ -1,7 +1,7 @@
 # mini-HOPE
 
-A NumPy implementation of the core machinery from **"Hilbert Operator
-for Progressive Encoding (HOPE)"** (Mobahi & Bartlett, Google DeepMind, 2026;
+A NumPy implementation of the core machinery from "Hilbert Operator
+for Progressive Encoding (HOPE)" (Mobahi & Bartlett, Google DeepMind, 2026;
 arXiv:2607.21366)
 
 
@@ -83,7 +83,7 @@ surrogate is calibrated on: the DEFT premise, demonstrated.
 At full OANC scale (88.5M chars, 8,823 docs, 8 genres; val 1.666 nats), the
 core findings replicate a third time: near-Gaussian median with a heavy
 tail, zero merges under the MaxEnt warp against 76 empirical, and a 0.43-nat
-gap to L1 pruning at 35% density. Two honest scale effects: surrogate
+gap to L1 pruning at 35% density. Two scale effects: surrogate
 fidelity decays with breadth (capacity Spearman 0.982 pilot, 0.963 MASC,
 0.938 OANC; map robustness Jaccard 0.789), and random pruning nearly matches
 capacity-ordered pruning at full scale (2.638 vs 2.636 nats at 35%), so at
