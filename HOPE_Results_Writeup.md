@@ -218,8 +218,16 @@ labels are cheap correlational probes; the breadth trend is confounded with
 training quality; and the GELU parent synthesis fixes an input scale that
 ReLU's homogeneity would have left free.
 
-The paper's coda calls parameters mere shadows of the function. Held up
-against language, the shadows cast a map, and the map reads, provided you
-check the projection before you navigate: one calibration pass's kurtosis
-profile tells you where the chart is sound and where it is drawn upside
-down. 
+## Engineering notes
+
+The stack was chosen for verifiability. The engine and both pilot models are pure NumPy and SciPy: closed-form kernels, merge algebra, and the character MLP itself. The point of refusing a framework was to leave no distance between the equations in this document and the code that executes them. PyTorch and Hugging Face transformers appear only where GPT-2 itself lives; even there, the analysis stays in NumPy, with weights extracted, priced, and written back as arrays.
+
+Verification is treated as architecture, not afterthought. Every layer of the tower is pinned by the 34-test suite: closed forms against Monte Carlo; the O(n) rank-2 parent solve against an explicit SVD reference; the Gauss-Hermite GELU kernels against both Monte Carlo and the ReLU closed forms they generalize; writeback exactness meaning a pruned model must equal manual subtraction to 1e-10, a merged parent must realize its predicted function; the vectorized correlation warp against its scalar reference; and the incremental pairwise tracker against a from scratch rebuild to 1e-9. The GPT-2 script additionally opens with runtime self-checks like hook capture semantics and writeback equivalence designed to fail before compute is spent.
+
+Everything is resumable, cached, and deterministic. Each driver decomposes into idempotent parts - train, surrogate, map, registers, finish - with artifacts cached between them: model weights as npz, cleaned corpora, BPE token streams, pickled map states. Seeds are fixed throughout, smoke tests write to an isolated results directory, and any part can be rerun in seconds from its caches.
+
+Two optimizations made the mapping loops feasible. Replacing the per-pair SVD in parent synthesis with the equivalent 2x2 eigenproblem took a full mapping run from exceeding its compute ceiling to twelve seconds. At GPT-2 width, maintaining the pairwise structure incrementally (one Gram or correlation build, then rank-local row and column updates as units leave and parents arrive) replaced a quadratic per-step rebuild that would have turned each block's encoding into hours. The remaining costs are explicit knobs: a top-correlated candidate prefilter for merge pricing, and loss checkpoints every 64 actions rather than every action.
+
+The data layer is where language projects live or die. The corpus module anchors OANC's genre labels on its directory tiers, detags and detokenizes the MASC slice from an independent mirror, splits train from validation at document level stratified by genreso n o document leaks across the boundary, samples calibration contexts within register spans, and encodes characters as uint8 (85 MB where int64 would have been 680). Acquiring the corpus itself required engineering around a dormant host with an expired certificate including pinned plain-HTTP commands, size and structure checks, and cross validation of the download against the independently mirrored MASC documents it contains.
+
+Writeback maintains the ledger quality. Every prune and merge is deployed into the live model by direct weight surgery, so every loss curve in this document is measured on the edited model rather than predicted by the theory being tested. The repository follows a src-layout package installable with pip install -e ., with the pilot stages frozen as reported and the broad-corpus and GPT-2 drivers parameterized on top of the same core.
