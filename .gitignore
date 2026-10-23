@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# R
+.Rhistory
+.RData
+
+# Corpus data lives locally, not in git — keep only the placeholder READMEs
+data/masc/*
+!data/masc/README.md
+data/OANC/*
+!data/OANC/README.md
