@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minihope"
+version = "0.1.0"
+description = "Pure-NumPy implementation of HOPE (Mobahi & Bartlett, arXiv:2607.21366), tested against character-level and GPT-2 language models"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Laura Hawkins" }]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+gpt2 = ["torch>=2.2", "transformers>=4.40"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
