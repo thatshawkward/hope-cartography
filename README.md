@@ -1,5 +1,7 @@
 # mini-HOPE
 
+[![CI](https://github.com/thatshawkward/hope-cartography/actions/workflows/ci.yml/badge.svg)](https://github.com/thatshawkward/hope-cartography/actions/workflows/ci.yml)
+
 A NumPy implementation of the core machinery from "Hilbert Operator
 for Progressive Encoding (HOPE)" (Mobahi & Bartlett, Google DeepMind, 2026;
 arXiv:2607.21366)
