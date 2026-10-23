@@ -279,14 +279,14 @@ check the projection before you navigate: one calibration pass's kurtosis
 profile tells you where the chart is sound and where it is drawn upside
 down. The mapping has begun.
 
-*Code, ledgers, figures, and 34 passing tests: the `hope-cartography`
+*Code, ledgers, figures, and 29 passing tests: the `hope-cartography`
 repository.*
 
 ## Engineering notes
 
 The stack was chosen for verifiability. The engine and both pilot models are pure NumPy and SciPy: closed-form kernels, merge algebra, and the character MLP itself. The point of refusing a framework was to leave no distance between the equations in this document and the code that executes them. PyTorch and Hugging Face transformers appear only where GPT-2 itself lives; even there, the analysis stays in NumPy, with weights extracted, priced, and written back as arrays.
 
-Verification is treated as architecture, not afterthought. Every layer of the tower is pinned by the 34-test suite: closed forms against Monte Carlo; the O(n) rank-2 parent solve against an explicit SVD reference; the Gauss-Hermite GELU kernels against both Monte Carlo and the ReLU closed forms they generalize; writeback exactness meaning a pruned model must equal manual subtraction to 1e-10, a merged parent must realize its predicted function; the vectorized correlation warp against its scalar reference; and the incremental pairwise tracker against a from scratch rebuild to 1e-9. The GPT-2 script additionally opens with runtime self-checks like hook capture semantics and writeback equivalence designed to fail before compute is spent.
+Verification is treated as architecture, not afterthought. Every layer of the tower is pinned by the 29-test suite: closed forms against Monte Carlo; the O(n) rank-2 parent solve against an explicit SVD reference; the Gauss-Hermite GELU kernels against both Monte Carlo and the ReLU closed forms they generalize; writeback exactness meaning a pruned model must equal manual subtraction to 1e-10, a merged parent must realize its predicted function; the vectorized correlation warp against its scalar reference; and the incremental pairwise tracker against a from scratch rebuild to 1e-9. The GPT-2 script additionally opens with runtime self-checks like hook capture semantics and writeback equivalence designed to fail before compute is spent.
 
 Everything is resumable, cached, and deterministic. Each driver decomposes into idempotent parts - train, surrogate, map, registers, finish - with artifacts cached between them: model weights as npz, cleaned corpora, BPE token streams, pickled map states. Seeds are fixed throughout, smoke tests write to an isolated results directory, and any part can be rerun in seconds from its caches.
 
