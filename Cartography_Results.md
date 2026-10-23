@@ -1,9 +1,9 @@
 # Compression as Cartography: HOPE, Tested Against Language
 
-Results from a verified NumPy implementation of Mobahi
+*Results from a verified NumPy implementation of Mobahi
 and Bartlett's "Hilbert Operator for Progressive Encoding" (arXiv:2607.21366),
 put on trial against a character-level language model, three corpora of
-increasing breadth, and GPT-2.
+increasing breadth, and GPT-2.*
 
 When I first read HOPE, I closed my response with a question the paper left
 open: whether the Gaussian surrogate survives the Zipfian skew of text
@@ -112,7 +112,7 @@ leaving every other step untouched, and merging wakes: 17, 41, and 76 merges
 respectively, with slightly better loss trajectories. The framework's
 elegant unification of pruning and merging into one projection is, on
 text-trained models under its own surrogate, a unification in principle
-only; removal is priced truthfully, however redundancy is not perceived.
+only; removal is priced honestly, redundancy is not perceived.
 
 ## Finding 4: the map is real, robust, and corpus-relative
 
@@ -122,7 +122,7 @@ pruning at 35 percent density on the smaller corpora, and $0.43$ below on
 full OANC. At full scale a caveat appears that I consider a finding: random
 pruning ties capacity-ordered pruning ($2.638$ vs $2.636$ nats), because a
 saturated model has no cheap units, so every order costs alike. The value of
-the ordering then concentrates entirely in what survives rather than the
+the ordering then concentrates entirely in *what* survives rather than the
 curve, which is the cartographic point anyway.
 
 Judged as measurement, the map barely moves when the correlation model is
@@ -157,7 +157,7 @@ registers with nameable units.
 
 The GPT-2 experiment (blocks 2, 6, and 12 encoded to 35 percent density,
 OANC calibration and evaluation, quadrature GELU kernels) was designed
-around one hypothesis: paper-versus-empirical map divergence should track
+around one hypothesis: paper vs.empirical map divergence should track
 the depth profile of non-Gaussianity. The hypothesis resolved through a
 different channel than posed, twice over.
 
@@ -175,7 +175,7 @@ Second, the fiction's failure surfaced in the capacity pricing itself, and
 it surfaced exactly where the shape statistics said to look. In block 2,
 whose median excess kurtosis is +3.09 under OANC calibration, the data-free
 ordering is anti-guidance: following it drives NLL from 3.56 to roughly 5.15
-by 60 percent density, then recovers non-monotonically to 4.3, while
+by 60 percent density, then*recovers non-monotonically to 4.3, while
 random deletion of the same fractions costs almost nothing. Two things in
 that sentence deserve emphasis. Random being free means block 2 is highly
 redundant to unbiased deletion, so the surrogate is not failing to find
@@ -212,11 +212,75 @@ calibration pass that builds the surrogate yields the per-block kurtosis
 profile that flags where not to believe it. For language models: compression order is readable as a hierarchy
 of dispensability, that hierarchy is corpus- and register-relative, and the
 eviction ledger gives the "acquisition in reverse" reading an operational
-form. The limits being these are small models mapped without retraining
+form. The honest limits: these are small models mapped without retraining
 between actions (deliberately, to read the raw data-free trajectory);
 labels are cheap correlational probes; the breadth trend is confounded with
 training quality; and the GELU parent synthesis fixes an input scale that
 ReLU's homogeneity would have left free.
+
+## Practical implications
+
+A framework tested is an instrument specified, and instruments have users.
+Each of the following is licensed by a specific finding rather than by
+enthusiasm.
+
+**Data-free pruning acquires a trust boundary.** The ordering result makes
+capacity a legitimate pruning criterion for language models with no
+gradients, no labels, and no access to the training corpus: one calibration
+pass suffices, which matters because the people compressing a model are
+often not the people who trained it and legally cannot touch its data. The
+findings then draw the boundary on that license: removal can be priced
+data-free; consolidation cannot (it requires an activation pass for real
+correlations, and at transformer width it may simply never activate); and
+the same calibration pass yields the per-block kurtosis profile that flags
+where the data-free map inverts. Trust the mid-to-late stack; measure
+before trusting the ends.
+
+**Compression becomes capability selection, with an audit trail.** Because
+the map is defined by whatever calibration sees, choosing the calibration
+slice is choosing what the compressed model keeps: calibrate on support
+transcripts and the pruner structurally protects conversation-core units
+while evicting biomedical machinery as slack. The eviction ledger is then a
+deliverable in its own right, a manifest of every removed unit with its
+label, capacity, and step; and the saturation result sharpens the point,
+since where every pruning order costs similar loss, control over what
+survives is the entire value of the method.
+
+**Register adaptation gets a measured partition.** DEFT freezes a core and
+adapts slack but does not say where the boundary sits. The register
+matrices answer per pair (conversation and technical prose share
+three-quarters of a core where most written pairs share nine-tenths), and
+the GPT-2 depth gradient answers by layer: for register adaptation, the
+deep feed-forward blocks are what you would open. The stability-plasticity
+dilemma gets a surveyed border instead of a presupposed one.
+
+**The capacity vector is a cheap functional fingerprint.** Same weights,
+two calibrations, compare: that is a functional diff, usable between
+yesterday's traffic and today's, between pre- and post-fine-tune
+checkpoints, between languages, for the cost of forward passes and closed
+forms. It also triages costlier interpretability (spend sparse-autoencoder
+and circuit budgets on the register-variable units and the heavy-tailed
+survivors first) and carries a quantization corollary: the units that break
+int8 are, by this metric, load-bearing; isolate them rather than prune
+them.
+
+**And the map measures corpora, not only models.** Since maps are
+corpus-relative, the distance between two maps is a model-grounded distance
+between two registers: conversation-to-technical at 0.855 against a
+written-pair median near 0.98 is a register taxonomy derived from what a
+network must functionally reallocate rather than from surface features,
+applicable to corpus comparability, to training-mix design, and, with
+acquisition-ordered benchmarks, to the reverse-acquisition question this
+project keeps circling.
+
+The paper's coda calls parameters mere shadows of the function. Held up
+against language, the shadows cast a map, and the map reads, provided you
+check the projection before you navigate: one calibration pass's kurtosis
+profile tells you where the chart is sound and where it is drawn upside
+down. The mapping has begun.
+
+*Code, ledgers, figures, and 34 passing tests: the `hope-cartography`
+repository.*
 
 ## Engineering notes
 
