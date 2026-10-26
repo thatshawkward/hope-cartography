@@ -39,8 +39,8 @@ GOUT = os.path.join(os.path.dirname(HERE), "gpt2map", "results")
 
 CHECKPOINTS = (0.90, 0.75, 0.60, 0.45, 0.35)
 TARGET = 0.35
-FT_STEPS = 300          # per recovery block; pilot-confirmed
-FT_LR = 1e-5
+FT_STEPS = 300          # per recovery block; the pilot's knee
+FT_LR = 2e-5            # beat 5e-6 at every pilot budget
 BLOCKS5 = (2, 12)
 
 
@@ -162,19 +162,26 @@ def save_curve(name, curve):
 
 
 def run_verify(ctx, blocks):
+    """Re-measure the static baselines on today's library stack and report
+    the drift against the tracked curves. The torch/transformers stack has
+    moved since the originals were recorded (uncompressed NLL shifted), so
+    every stage-5 comparison is made within today's stack only."""
     for bix in blocks:
-        for plan, order in (("empirical", hope_order(bix)),
-                            ("base_random",
-                             list(np.random.default_rng(3).permutation(
-                                 3072)))):
-            curve = run_replay(ctx, bix, order, None, f"verify b{bix} {plan}")
-            ref = np.load(os.path.join(GOUT, f"map_b{bix}_{plan}.npz"))
-            ref = ref["curve"]
+        st0 = fresh_state(ctx, bix)
+        orders = dict(hope=hope_order(bix),
+                      random=list(np.random.default_rng(3).permutation(3072)),
+                      l1=list(np.argsort(np.abs(st0.W).sum(0))))
+        tracked = dict(hope="empirical", random="base_random", l1="base_l1")
+        for name, order in orders.items():
+            curve = run_replay(ctx, bix, order, None, f"static b{bix} {name}")
+            save_curve(f"static_b{bix}_{name}", curve)
+            ref = np.load(os.path.join(
+                GOUT, f"map_b{bix}_{tracked[name]}.npz"))["curve"]
             ours = np.array(curve)
             n = min(len(ours), len(ref))
             dmax = float(np.abs(ours[:n, 1] - ref[:n, 1]).max())
-            print(f"b{bix} {plan}: {len(ours)} vs {len(ref)} points, "
-                  f"max |nll delta| {dmax:.5f}")
+            print(f"b{bix} {name}: {len(ours)} pts, "
+                  f"max |nll delta| vs tracked {dmax:.4f}")
 
 
 def run_pilot(ctx, bix=2):
@@ -202,8 +209,36 @@ def run_pilot(ctx, bix=2):
     restore(model, ctx["snapshot"])
 
 
+def run_control(ctx, log):
+    """GPT-2 is a WebText model, so OANC recovery is also domain adaptation:
+    the uncompressed model under the identical budget and seeds is the
+    ceiling every compressed arm must be read against."""
+    model, val_win = ctx["model"], ctx["val_win"]
+    for name, blocks_steps in (("distributed",
+                                [FT_STEPS] * len(CHECKPOINTS)),
+                               ("endonly", [FT_STEPS * len(CHECKPOINTS)])):
+        path = os.path.join(OUT, f"control_{name}.npz")
+        if os.path.exists(path):
+            continue
+        restore(model, ctx["snapshot"])
+        curve = [(1.0, forward_batches(model, val_win, want_loss=True))]
+        for idx, steps in enumerate(blocks_steps):
+            sgd_recover(model, ctx["toks"]["train"], steps=steps, lr=FT_LR,
+                        seed=1000 + idx, scope="full")
+            curve.append((1.0, forward_batches(model, val_win,
+                                               want_loss=True)))
+            log.append(dict(block=0, plan="control", repair=name, density=1.0,
+                            steps=steps, nll_pre=curve[-2][1],
+                            nll_post=curve[-1][1]))
+        np.savez(path, curve=np.array(curve))
+        print(f"  [control {name}] adapted ceiling {curve[-1][1]:.4f}",
+              flush=True)
+        restore(model, ctx["snapshot"])
+
+
 def run_arms(ctx, blocks):
     log = []
+    run_control(ctx, log)
     for bix in blocks:
         order = hope_order(bix)
         rand = list(np.random.default_rng(3).permutation(3072))
@@ -249,14 +284,16 @@ def run_arms(ctx, blocks):
 
 def curves_for(bix):
     out = {}
-    for plan in ("empirical", "base_random", "base_l1"):
-        z = np.load(os.path.join(GOUT, f"map_b{bix}_{plan}.npz"))
-        out[f"static_{plan}"] = [tuple(r) for r in z["curve"]]
     for f in sorted(os.listdir(OUT)):
-        if f.startswith(f"run_b{bix}_") and f.endswith(".npz"):
+        if not f.endswith(".npz"):
+            continue
+        if f.startswith(f"run_b{bix}_"):
             key = f[len(f"run_b{bix}_"):-4]
-            out[key] = [tuple(r) for r in
-                        np.load(os.path.join(OUT, f))["curve"]]
+        elif f.startswith(f"static_b{bix}_"):
+            key = "static_" + f[len(f"static_b{bix}_"):-4]
+        else:
+            continue
+        out[key] = [tuple(r) for r in np.load(os.path.join(OUT, f))["curve"]]
     return out
 
 
@@ -271,10 +308,16 @@ def run_finish(blocks):
              f"at {len(CHECKPOINTS)} density checkpoints; re-projection is "
              "one closed-form c_proj refit per checkpoint, zero gradient "
              "steps; end-only gets the matched total SGD budget of "
-             f"{FT_STEPS * len(CHECKPOINTS)} steps.", ""]
-    series_label = {"static_empirical": "HOPE static (no recovery)",
-                    "static_base_random": "random static",
-                    "static_base_l1": "L1 static",
+             f"{FT_STEPS * len(CHECKPOINTS)} steps.", "",
+             "All numbers here were measured on today's torch/transformers "
+             "stack, including the re-measured static baselines: the stack "
+             "has drifted since gpt2map's tracked curves were recorded "
+             "(uncompressed NLL 3.73 today vs 3.56 tracked on identical "
+             "windows), so cross-stack comparisons are avoided throughout.",
+             ""]
+    series_label = {"static_hope": "HOPE static (no recovery)",
+                    "static_random": "random static",
+                    "static_l1": "L1 static",
                     "hope_reproject": "HOPE + re-projection",
                     "hope_blocksgd": "HOPE + block SGD",
                     "hope_fullsgd": "HOPE + full SGD",
@@ -286,6 +329,12 @@ def run_finish(blocks):
                     "random_blocksgd": "random + block SGD",
                     "hope_end_fullsgd": "end-only full SGD",
                     "hope_end_reproject": "end-only re-projection"}
+    ceiling = None
+    cpath = os.path.join(OUT, "control_distributed.npz")
+    if os.path.exists(cpath):
+        ceiling = float(np.load(cpath)["curve"][-1, 1])
+        lines += [f"Adapted ceiling (no eviction, same recovery budget and "
+                  f"seeds): NLL {ceiling:.4f}.", ""]
     for bix in blocks:
         cv = curves_for(bix)
         lines += [f"## Block {bix}", "",
@@ -299,7 +348,7 @@ def run_finish(blocks):
 
         fig, ax = plt.subplots(figsize=(8.6, 4.6))
         cmap = plt.get_cmap("tab10")
-        show = ["static_empirical", "static_base_random", "hope_reproject",
+        show = ["static_hope", "static_random", "hope_reproject",
                 "hope_blocksgd", "hope_fullsgd", "random_fullsgd",
                 "replan_fullsgd", "hope_end_fullsgd"]
         for k, key in enumerate(show):
@@ -309,6 +358,9 @@ def run_finish(blocks):
             ax.plot([d for d, _ in c], [l for _, l in c],
                     label=series_label[key], color=cmap(k), lw=1.5,
                     ls="--" if "end" in key else "-")
+        if ceiling is not None:
+            ax.axhline(ceiling, color="0.3", lw=1.0, ls=":",
+                       label="adapted ceiling (no eviction)")
         ax.set_xlabel("block density")
         ax.set_ylabel("validation NLL (nats)")
         ax.set_title(f"GPT-2 block {bix}: eviction with recovery")
