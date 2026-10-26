@@ -40,8 +40,9 @@ def setup():
     val = sample_contexts(val_ids, K, 512, np.random.default_rng(1))
     calib, _ = sample_contexts(train_ids, K, 1024, np.random.default_rng(2))
     layer = calibrated_layer(model, calib)
-    return dict(model=model, layer=layer, val=val,
-                train_ids=train_ids, calib=calib)
+    return dict(model=model, layer=layer, val=val, train_ids=train_ids,
+                calib=calib,
+                sampler=lambda n, rng: sample_contexts(train_ids, K, n, rng))
 
 
 def base_map(setup, **kw):
@@ -78,7 +79,7 @@ def test_replay_hook_fires_at_checkpoints(setup):
 
     def hook(model, density, step):
         seen.append(density)
-        return ft_block(model, setup["train_ids"], steps=30, lr=3e-4,
+        return ft_block(model, setup["sampler"], steps=30, lr=3e-4,
                         seed=1, batch=32)
 
     _, curve = replay(clone_model(setup["model"]), res.events, res.parents,
@@ -96,14 +97,14 @@ def test_ft_block_recovers_pruning_damage(setup):
     for _ in range(6):
         model = prune_unit(model, int(rng.integers(model.W1.shape[1])))
     before = model.loss(*setup["val"])
-    ft_block(model, setup["train_ids"], steps=300, lr=1e-3, seed=2, batch=64)
+    ft_block(model, setup["sampler"], steps=300, lr=1e-3, seed=2, batch=64)
     after = model.loss(*setup["val"])
     assert after < before
 
 
 def test_encode_hook_with_recalibration(setup):
     def hook(model, layer, density, step):
-        ft_block(model, setup["train_ids"], steps=30, lr=3e-4,
+        ft_block(model, setup["sampler"], steps=30, lr=3e-4,
                  seed=4, batch=32)
         return model, calibrated_layer(model, setup["calib"])
 

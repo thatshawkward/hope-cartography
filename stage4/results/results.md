@@ -1,4 +1,4 @@
-# Stage 4 results: trajectory fine-tuning
+# Stage 4 results: trajectory fine-tuning (shakespeare)
 
 Recovery blocks: 750 Adam steps at lr 0.0015 at each of 13 density checkpoints (0.95 down to 0.35); end-only gets the identical total budget of 9750 steps in one block. Recovery seeds are paired across arms.
 

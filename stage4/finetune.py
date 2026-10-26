@@ -12,10 +12,16 @@ def reset_adam(model):
                    for p in model._params}
 
 
-def ft_block(model, train_ids, steps, lr, seed, batch=256):
+def ft_block(model, sample, steps, lr, seed, batch=256):
+    """sample(n, rng) -> (ctx, tgt). The indirection matters: the broad
+    corpora split train/val by document span, so flat-stream sampling
+    (model.fit's internal draw) would leak across the boundary."""
     reset_adam(model)
-    model.fit(train_ids, steps=steps, batch=batch, lr=lr, seed=seed,
-              log_every=10**9)
+    rng = np.random.default_rng(seed)
+    for _ in range(steps):
+        ctx, tgt = sample(batch, rng)
+        _, grads = model.loss_and_grads(ctx, tgt)
+        model.adam_step(grads, lr=lr)
     return model
 
 
