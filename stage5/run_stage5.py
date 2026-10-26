@@ -335,7 +335,7 @@ def run_finish(blocks):
         ceiling = float(np.load(cpath)["curve"][-1, 1])
         lines += [f"Adapted ceiling (no eviction, same recovery budget and "
                   f"seeds): NLL {ceiling:.4f}.", ""]
-    for bix in blocks:
+    for fig_i, bix in enumerate(blocks):
         cv = curves_for(bix)
         lines += [f"## Block {bix}", "",
                   "| run | " + " | ".join(f"nll @ {d}" for d in probe) + " |",
@@ -368,10 +368,10 @@ def run_finish(blocks):
         ax.grid(alpha=0.25)
         ax.legend(fontsize=7)
         fig.tight_layout()
-        fig.savefig(os.path.join(OUT, f"fig_g{bix + 1}_b{bix}_recovery.png"),
+        fig.savefig(os.path.join(OUT, f"fig_g{3 + fig_i}_b{bix}_recovery.png"),
                     dpi=140)
         plt.close(fig)
-        lines.append(f"Figure: fig_g{bix + 1}_b{bix}_recovery.png")
+        lines.append(f"Figure: fig_g{3 + fig_i}_b{bix}_recovery.png")
         lines.append("")
 
     with open(os.path.join(OUT, "results.md"), "w") as fh:

@@ -58,8 +58,23 @@ puts the published random-tie at the lucky end of a ~0.09-nat single-draw
 spread (seed 3: 2.638; seeds 5/7/11: 2.67-2.73; capacity 2.636). Ledgers
 and figures in `stage4/results/`.
 
-Next: trajectory fine-tuning on GPT-2, where block 2's inversion asks
-whether recovery can repair anti-guidance.
+**Stage 5** (`stage5/`): recovery on GPT-2 itself, read against an
+adaptation ceiling — OANC fine-tuning also domain-adapts the WebText
+model, so every arm is compared to the uncompressed model under the
+identical budget and seeds. Full-model SGD erases block 2's catastrophic
+inversion entirely: all eviction orders land within 0.03 nats of the
+ceiling. The mechanism is sharper still: a single closed-form c_proj
+refit — zero gradient steps — undoes nearly all of the inversion, so the
+data-free order had scrambled the block's readout, not destroyed its
+information. The same refit *hurts* at block 12 and block-local SGD
+leaves 2.5x more residual there: repairability degrades with depth, in
+line with the register-depth gradient. Static baselines re-measured on
+today's library stack (drift against the tracked curves is reported,
+never mixed). Curves, logs, and figures in `stage5/results/`.
+
+Next: hardening — seed and calibration-volume sweeps for the recovery
+claims, the capacity-fingerprint diff across adaptation, and folding
+stages 4-5 into the essay.
 
 ## Broad corpus: OANC
 
