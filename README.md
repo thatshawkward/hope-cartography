@@ -40,8 +40,19 @@ Findings, with ledgers and figures in `stage3/results/`:
   preserved, punctuation detectors are cut hardest, and heavy-tailed units
   skew toward surviving. No retraining between actions by design.
 
-Next: trajectory fine-tuning, and GELU kernels so the GPT-2 map can be drawn where the
-surrogate strains most.
+**Stage 4** (`stage4/`): recovery enters the trajectory. 750-step recovery
+blocks at 13 density checkpoints, with the base plan replayed verbatim (A),
+re-planned on recalibrated statistics after each block (B), end-only
+recovery at matched total budget, and L1/random orders under the same
+paired blocks. Recovery erases the ordering's loss advantage (every order
+lands within ~0.03 nats of the rest at 35% density); one end-placed block
+beats the distributed thirteen (1.89 vs 1.94 nats); re-planning rewrites
+~30% of the eviction set (Jaccard 0.70-0.72) at unchanged final loss. Once
+recovery is allowed, the map's value concentrates in what survives, not in
+loss. Ledgers and figures in `stage4/results/`.
+
+Next: trajectory fine-tuning on GPT-2, where block 2's inversion asks
+whether recovery can repair anti-guidance.
 
 ## Broad corpus: OANC
 
