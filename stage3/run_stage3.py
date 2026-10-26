@@ -97,8 +97,8 @@ def build_context():
     label_counts = Counter(unit_labels)
     print("label counts:", dict(label_counts))
     return dict(model=model, layer=layer, val=val, vocab=vocab,
-                probe_ctx=probe_ctx, probe_tgt=probe_tgt, h_probe=h_probe,
-                exkurt=exkurt, unit_labels=unit_labels,
+                train_ids=train_ids, probe_ctx=probe_ctx, probe_tgt=probe_tgt,
+                h_probe=h_probe, exkurt=exkurt, unit_labels=unit_labels,
                 label_counts=label_counts)
 
 

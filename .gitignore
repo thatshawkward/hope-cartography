@@ -17,3 +17,5 @@ data/masc/*
 !data/masc/README.md
 data/OANC/*
 !data/OANC/README.md
+# regenerable ~90MB corpus cache written by broad/run_broad.get_corpus
+broad/results/corpus_*.npz
