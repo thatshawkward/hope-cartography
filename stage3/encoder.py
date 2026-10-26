@@ -32,6 +32,7 @@ class MapEvent:
 class MapResult:
     events: list = field(default_factory=list)
     lineage: dict = field(default_factory=dict)   #parent id >> (id_i, id_j)
+    parents: dict = field(default_factory=dict)   #parent id >> physical parameters
     surviving_ids: np.ndarray = None
     final_model: object = None
     val_curve: list = field(default_factory=list)
@@ -39,8 +40,10 @@ class MapResult:
 
 def encode_and_map(model, layer, unit_labels, unit_exkurt, val,
                    probe_ctx=None, mode="paper", target_density=0.35,
-                   rho_min=0.10, max_pairs=300, min_units=8, verbose_every=40):
+                   rho_min=0.10, max_pairs=300, min_units=8, verbose_every=40,
+                   checkpoints=(), checkpoint_hook=None):
     assert mode in ("paper", "empirical")
+    cps = sorted(checkpoints, reverse=True)
     h0 = layer.n_neurons
     ids = np.arange(h0)
     next_id = h0
@@ -97,6 +100,7 @@ def encode_and_map(model, layer, unit_labels, unit_exkurt, val,
             layer = layer.subset([k for k in range(n) if k != j])
             parent_id = next_id
             res.lineage[parent_id] = removed
+            res.parents[parent_id] = r.parent
             labels[parent_id] = "parent"
             exkurt[parent_id] = float("nan")
             new_ids = ids.copy(); new_ids[i] = parent_id
@@ -117,6 +121,12 @@ def encode_and_map(model, layer, unit_labels, unit_exkurt, val,
         if verbose_every and step % verbose_every == 0:
             print(f"  [{mode}] step {step:>4}  N {layer.n_neurons:>4}  "
                   f"density {density:.3f}  val {vloss:.4f}", flush=True)
+
+        while cps and density <= cps[0] + 1e-12:
+            cps.pop(0)
+            if checkpoint_hook is not None:
+                model, layer = checkpoint_hook(model, layer, density, step)
+                res.val_curve.append((density, model.loss(*val)))
 
     res.surviving_ids = ids
     res.final_model = model
