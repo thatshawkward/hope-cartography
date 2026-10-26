@@ -19,3 +19,9 @@ data/OANC/*
 !data/OANC/README.md
 # regenerable ~90MB corpus cache written by broad/run_broad.get_corpus
 broad/results/corpus_*.npz
+
+# regenerable GPT-2 caches (the large ones were purged from history once)
+gpt2map/results/tokens_*.npz
+gpt2map/results/calib_stats.pkl
+gpt2map/results/register_caps.pkl
+stage5/results/calib.pkl
