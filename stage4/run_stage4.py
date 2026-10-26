@@ -25,7 +25,7 @@ from scipy import stats as sps
 from stage2 import data as D
 from stage2.calibrate import calibrated_layer
 from stage3.encoder import encode_and_map
-from stage3.run_stage3 import (K, TARGET_DENSITY, build_context, loss_at,
+from stage3.run_stage3 import (K, TARGET_DENSITY, build_context,
                                removed_originals, write_ledger)
 from stage3.writeback import clone_model
 from stage4.finetune import FTLog, checkpoint_densities, ft_block
@@ -35,8 +35,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "results")
 
 CHECKPOINTS = checkpoint_densities(0.95, TARGET_DENSITY, 0.05)
-FT_STEPS = 750          # per recovery block; chosen by the pilot sweep
-FT_LR = 3e-4
+FT_STEPS = 750          # per recovery block; the pilot sweep's knee
+FT_LR = 1.5e-3          # training rate beat 3e-4 at every pilot budget
 MODES = ("paper", "empirical")
 H0 = 256
 
@@ -215,8 +215,10 @@ def make_figures(curves, drift):
         cmap = plt.get_cmap("tab10")
         for k, (key, lab) in enumerate(series):
             c = curves[key]
-            ax.plot([d for d, _ in c], [l for _, l in c],
-                    label=lab, color=cmap(k), lw=1.6)
+            # end-only tracks base exactly until its final block: dash it
+            ax.plot([d for d, _ in c], [l for _, l in c], label=lab,
+                    color=cmap(k), lw=1.6,
+                    ls="--" if key.startswith("end_") else "-")
         ax.set_xlabel("density")
         ax.set_title(f"{mode} correlations")
         ax.invert_xaxis()
@@ -241,6 +243,16 @@ def make_figures(curves, drift):
     fig.tight_layout()
     fig.savefig(f"{OUT}/fig9_capacity_drift.png", dpi=140)
     plt.close(fig)
+
+
+def loss_at(curve, density):
+    # the arm's state when density first reaches the probe, read after any
+    # recovery applied at that same density (curves hold pre/post duplicates)
+    ds = [d for d, _ in curve]
+    i = next((k for k, d in enumerate(ds) if d <= density + 1e-9), len(ds) - 1)
+    while i + 1 < len(ds) and ds[i + 1] == ds[i]:
+        i += 1
+    return float(curve[i][1])
 
 
 def order_divergence(base_res, b_res):
@@ -301,7 +313,7 @@ def run_finish():
             worst = min(rows, key=lambda r: r["spearman"])
             lines.append(f"- {mode}: Spearman(pre, post) ranges "
                          f"{worst['spearman']:.3f} (at density "
-                         f"{worst['density']}) to "
+                         f"{worst['density']:.2f}) to "
                          f"{max(r['spearman'] for r in rows):.3f}.")
     lines += ["", "Figures: fig8_recovery_trajectories.png, "
               "fig9_capacity_drift.png."]
