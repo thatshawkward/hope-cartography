@@ -49,7 +49,14 @@ lands within ~0.03 nats of the rest at 35% density); one end-placed block
 beats the distributed thirteen (1.89 vs 1.94 nats); re-planning rewrites
 ~30% of the eviction set (Jaccard 0.70-0.72) at unchanged final loss. Once
 recovery is allowed, the map's value concentrates in what survives, not in
-loss. Ledgers and figures in `stage4/results/`.
+loss. On full OANC the picture sharpens: re-planning on the recovering
+network beats the frozen plan at every probe density — the saturated map
+has no fixed slack, so adaptivity pays — end-only's margin widens, and the
+eviction set rewrites harder (Jaccard 0.60-0.66, capacity drift to 0.83).
+The stage-4 harness also reproduces the broad OANC ledger exactly, and
+puts the published random-tie at the lucky end of a ~0.09-nat single-draw
+spread (seed 3: 2.638; seeds 5/7/11: 2.67-2.73; capacity 2.636). Ledgers
+and figures in `stage4/results/`.
 
 Next: trajectory fine-tuning on GPT-2, where block 2's inversion asks
 whether recovery can repair anti-guidance.
